@@ -11,11 +11,12 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.Screen;
 
 /**
  * Created by hihihong on 2016-07-24.
  */
-public class GameOverState extends State {
+public class GameOverState implements Screen{
     private Texture bg;
     private TextButton restartButton;
     private BitmapFont font;
@@ -24,13 +25,14 @@ public class GameOverState extends State {
     private Stage stage;
     private Pixmap pixmap;
     private String scoreDisplay;
+    final GSM gsm;
 
-    public GameOverState(GameStateManager gsm, int score)
+    public GameOverState(GSM gsm, int score)
     {
-        super(gsm);
+        //super(gsm);
+        this.gsm = gsm;
 
         stage = new Stage();
-        Gdx.input.setInputProcessor(stage);
 
         this.bg = new Texture("gameoverBG.png");
 
@@ -41,48 +43,62 @@ public class GameOverState extends State {
         generateButton("Restart", 120, 420);
     }
 
-    @Override
     public void handleInput()
     {
         if (restartButton.isPressed())
         {
-            gsm.set(new MainMenuState(gsm));
+            Gdx.input.setInputProcessor(null);
+            gsm.setScreen(new MainMenuState(gsm));
         }
     }
 
     @Override
-    public void update(float dt)
+    public void render(float dt)
     {
         handleInput();
-    }
 
-    @Override
-    public void render(SpriteBatch sb)
-    {
         Gdx.gl.glClearColor(1,0,0,1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        sb.begin();
-        sb.draw(bg, 0, 0);
-        sb.end();
-        sb.begin();
+        gsm.batch.begin();
+        gsm.batch.draw(bg, 0, 0);
+        gsm.batch.end();
+        gsm.batch.begin();
 
         stage.getBatch().begin();
         stage.getBatch().draw(bg, 0, 0, 480, 800);
         stage.getBatch().end();
 
         stage.draw();
-        sb.end();
+        gsm.batch.end();
 
-        sb.begin();
+        gsm.batch.begin();
 
         font.setColor(1.0f, 1.0f, 1.0f, 1.0f);
-        font.draw(sb, scoreDisplay, 100, 750);
+        font.draw(gsm.batch, scoreDisplay, 100, 750);
 
-        sb.end();
+        gsm.batch.end();
     }
 
-    public void dispose()
-    {}
+    @Override
+    public void show()
+    {
+        Gdx.input.setInputProcessor(stage);
+    }
+
+    @Override
+    public void dispose() {}
+
+    @Override
+    public void resize(int width, int height) {}
+
+    @Override
+    public void pause() {}
+
+    @Override
+    public void resume() {}
+
+    @Override
+    public void hide() {}
 
     private void generateButton(String txt, int x, int y)
     {

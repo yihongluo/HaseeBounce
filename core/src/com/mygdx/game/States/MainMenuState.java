@@ -11,54 +11,84 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.Screen;
 
 /**
  * Created by hihihong on 2016-07-14.
  */
-public class MainMenuState extends State {
+public class MainMenuState implements Screen {
     private Texture bg;
     private TextButton startButton;
     private BitmapFont font;
     private Skin skin;
     private Stage stage;
     private Pixmap pixmap;
+    final GSM gsm;
 
 
-    public MainMenuState(GameStateManager gsm) {
-        super(gsm);
-        bg = new Texture("bg.png");
+    public MainMenuState(GSM gsm) {
+        this.gsm = gsm;
+        this.bg = new Texture("bg.png");
 
-        stage = new Stage();
-        Gdx.input.setInputProcessor(stage);
-        generateButton("Start game", 220, 420);
+        this.stage = new Stage();
+
+        this.startButton = generateButton("Start game", 220, 420);
+        stage.addActor(startButton);
 
     }
 
-    @Override
     public void handleInput() {
         if (startButton.isPressed())
         {
-            gsm.set(new PlayState(gsm));
+            Gdx.input.setInputProcessor(null);
+            gsm.setScreen(new PlayState(gsm));
         }
     }
 
     @Override
-    public void update(float dt)
+    public void resize(int width, int height)
     {
-        handleInput();
+
     }
 
     @Override
-    public void render(SpriteBatch sb)
+    public void pause()
     {
+
+    }
+
+    @Override
+    public void resume()
+    {
+
+    }
+
+    @Override
+    public void hide()
+    {
+
+    }
+
+    @Override
+    public void render(float dt)
+    {
+        handleInput();
+
         Gdx.gl.glClearColor(1,0,0,1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        sb.begin();
-        sb.draw(bg, 0, 0);
-        sb.end();
-        sb.begin();
+
+        gsm.batch.begin();
+        gsm.batch.draw(bg, 0, 0);
+        gsm.batch.end();
+        gsm.batch.begin();
         stage.draw();
-        sb.end();
+        gsm.batch.end();
+    }
+
+    @Override
+    public void show()
+    {
+        Gdx.input.setInputProcessor(stage);
     }
 
     @Override
@@ -69,16 +99,14 @@ public class MainMenuState extends State {
         skin.dispose();
     }
 
-    private void generateButton(String txt, int x, int y)
+    private TextButton generateButton(String txt, int x, int y)
     {
         createBasicSkin();
 
         TextButton button = new TextButton(txt, skin);
         button.setPosition(x, y);
 
-        this.startButton = button;
-
-        stage.addActor(button);
+        return button;
     }
 
     private void createBasicSkin(){

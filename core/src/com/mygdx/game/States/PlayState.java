@@ -4,6 +4,8 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.mygdx.game.sprites.Player;
 import com.badlogic.gdx.Gdx;
 import com.mygdx.game.sprites.Donut;
@@ -11,11 +13,15 @@ import com.mygdx.game.sprites.donutPool;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.Timer.Task;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.Screen;
 
 /**
  * Created by hihihong on 2016-07-14.
  */
-public class PlayState extends State
+public class PlayState implements Screen
 {
     private Texture bg;
     private Player left;
@@ -25,6 +31,8 @@ public class PlayState extends State
     private int score;
     private String scoreDisplay;
     private BitmapFont bmFont;
+    private BitmapFont font;
+    private Skin skin;
     private boolean ateDonut;
     private String ateDisplay;
     private float displayTimer;
@@ -33,27 +41,50 @@ public class PlayState extends State
     private String countdownString;
     private float countdownDisplayTimer;
     private boolean isCountingDown;
+    private TextButton pauseButton;
+    private Stage stage;
+    final GSM gsm;
 
     final int totalTime = 30;
 
-    public PlayState(GameStateManager gsm)
+    public PlayState(GSM gsm)
     {
 
-        super(gsm);
+        //super(gsm);
+        this.gsm = gsm;
+        this.bmFont = new BitmapFont();
+
         this.bg = new Texture("bg.png");
+
         this.left = new Player("leftPlayer.png", true, true);
         this.right = new Player("rightPlayer.png", false, false);
+
         this.activeDonuts = new Array<Donut>();
         this.activeDonutPool = new donutPool();
+
         this.score = 0;
         this.scoreDisplay = "Wohoo! You have " + this.score + " points!";
-        this.bmFont = new BitmapFont();
+
         this.ateDonut = false;
         this.displayTimer = 0;
+
         this.timer = 0;
+        this.timerDisplay = "Time left: " + (totalTime - (int)(this.timer));
+
         this.countdownDisplayTimer = 0;
         this.isCountingDown = false;
-        this.timerDisplay = "Time left: " + (totalTime - (int)(this.timer));
+
+        this.pauseButton = generateButton("Pause", 380, 700);
+        pauseButton.addListener( new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                System.out.println("yes");
+            };
+        });
+
+        this.stage = new Stage();
+
+        stage.addActor(pauseButton);
 
         int range = (3-1) + 1;
         int interval = (int)(Math.random() * range) + 1;
@@ -63,13 +94,17 @@ public class PlayState extends State
                 generateDonuts();
             }
         }, interval, 3);
-
-
     }
 
-    @Override
     public void handleInput()
     {
+        // Pause button
+        if (pauseButton.isPressed())
+        {
+            hide();
+            gsm.setScreen(new PauseMenu(gsm, score, this));
+        }
+
         // Move players vertically
         if (Gdx.input.justTouched())
         {
@@ -89,7 +124,6 @@ public class PlayState extends State
         }
     }
 
-    @Override
     public void update(float dt)
     {
         handleInput();
@@ -98,17 +132,19 @@ public class PlayState extends State
             // Stop game if time limit is reached
             if (timer >= 30)
             {
-                gsm.set(new GameOverState(gsm, score));
+                gsm.setScreen(new GameOverState(gsm, score));
             }
 
             // Move donut
             donut.update(dt);
+
             // If donut goes out of frame, recycle it
             if (donut.getPosition().x > 480 || donut.getPosition().x + donut.getWidth() < 0)
             {
                 activeDonuts.removeValue(donut, true);
                 activeDonutPool.free(donut);
             }
+
             // If donut collides with a player, recycle it
             if (donut.isCollided(this.left.getBond()) != -1 || donut.isCollided(this.right.getBond()) != -1)
             {
@@ -126,15 +162,15 @@ public class PlayState extends State
         this.left.update(dt);
         this.right.update(dt);
 
+        // Increment general timer
+        timer += dt;
+        timerDisplay = "Time left: " + (totalTime - (int)(this.timer));
+
         // Increment display score timer
         if (displayTimer <= 1)
         {
             displayTimer += Gdx.graphics.getDeltaTime();
         }
-
-        // Increment general timer
-        timer += dt;
-        timerDisplay = "Time left: " + (totalTime - (int)(this.timer));
 
         // Check if should be counting down
         if (updateCountdownString())
@@ -151,35 +187,37 @@ public class PlayState extends State
     }
 
     @Override
-    public void render(SpriteBatch sb)
+    public void render(float dt)
     {
+        update(dt);
+
         Gdx.gl.glClearColor(1,0,0,1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        sb.begin();
-        sb.draw(bg, 0 , 0);
+        gsm.batch.begin();
+        gsm.batch.draw(bg, 0 , 0);
 
         // Draw players
-        sb.draw(left.getAppearance(), left.getPosition().x, left.getPosition().y);
-        sb.draw(right.getAppearance(), right.getPosition().x, right.getPosition().y);
+        gsm.batch.draw(left.getAppearance(), left.getPosition().x, left.getPosition().y);
+        gsm.batch.draw(right.getAppearance(), right.getPosition().x, right.getPosition().y);
 
         // Draw donuts
         for (Donut donut:activeDonuts)
         {
-            sb.draw(donut.getAppearance(), donut.getPosition().x, donut.getPosition().y);
+            gsm.batch.draw(donut.getAppearance(), donut.getPosition().x, donut.getPosition().y);
         }
 
         // Display score text
         bmFont.setColor(1.0f, 1.0f, 1.0f, 1.0f);
-        bmFont.draw(sb, scoreDisplay, 25, 750);
+        bmFont.draw(gsm.batch, scoreDisplay, 25, 750);
 
         // Display timer
-        bmFont.draw(sb, timerDisplay, 220, 750);
+        bmFont.draw(gsm.batch, timerDisplay, 220, 750);
 
         // Display how many points player got for 1 sec
         if (ateDonut && displayTimer <= 1)
         {
-            bmFont.draw(sb, ateDisplay, 170, 400);
+            bmFont.draw(gsm.batch, ateDisplay, 170, 400);
         }
         else if (displayTimer > 1)
         {
@@ -190,7 +228,7 @@ public class PlayState extends State
         // Display countdown
         if (isCountingDown && countdownDisplayTimer <= 1)
         {
-            bmFont.draw(sb, countdownString, 220, 350);
+            bmFont.draw(gsm.batch, countdownString, 220, 350);
         }
         else if (countdownDisplayTimer > 1)
         {
@@ -198,8 +236,10 @@ public class PlayState extends State
             isCountingDown = false;
         }
 
-
-        sb.end();
+        gsm.batch.end();
+        gsm.batch.begin();
+        stage.draw();
+        gsm.batch.end();
     }
 
     @Override
@@ -216,6 +256,24 @@ public class PlayState extends State
 
         bmFont.dispose();
     }
+
+    @Override
+    public void show()
+    {
+        Gdx.input.setInputProcessor(stage);
+    }
+
+    @Override
+    public void resize(int width, int height) {}
+
+    @Override
+    public void pause() {}
+
+    @Override
+    public void resume() {}
+
+    @Override
+    public void hide() {}
 
     public void generateDonuts()
     {
@@ -264,6 +322,28 @@ public class PlayState extends State
             return true;
         }
         return false;
+    }
+
+    private TextButton generateButton(String txt, int x, int y)
+    {
+        createBasicSkin();
+
+        TextButton button = new TextButton(txt, skin);
+        button.setPosition(x, y);
+
+        return button;
+    }
+
+    private void createBasicSkin(){
+        //Create a font
+        font = new BitmapFont();
+        skin = new Skin();
+        skin.add("default", font);
+
+        //Create a button style
+        TextButton.TextButtonStyle textButtonStyle = new TextButton.TextButtonStyle();
+        textButtonStyle.font = skin.getFont("default");
+        skin.add("default", textButtonStyle);
     }
 }
 
