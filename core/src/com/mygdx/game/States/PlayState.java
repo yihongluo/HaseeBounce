@@ -1,6 +1,7 @@
 package com.mygdx.game.States;
 
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -17,6 +18,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.Screen;
+
 
 /**
  * Created by hihihong on 2016-07-14.
@@ -47,12 +49,19 @@ public class PlayState implements Screen
 
     final int totalTime = 30;
 
+    final int realHeight = Gdx.graphics.getHeight();
+    final int realWidth = Gdx.graphics.getWidth();
+    final float virtualHeight = 800f;
+    final float virtualWidth = 480f;
+    final float heightScale = realHeight/virtualHeight;
+    final float widthScale = realWidth/virtualWidth;
+
     public PlayState(GSM gsm)
     {
-
-        //super(gsm);
         this.gsm = gsm;
         this.bmFont = new BitmapFont();
+        this.bmFont.setColor(1.0f, 1.0f, 1.0f, 1.0f);
+        this.bmFont.getData().setScale(widthScale, heightScale);
 
         this.bg = new Texture("bg.png");
 
@@ -74,11 +83,10 @@ public class PlayState implements Screen
         this.countdownDisplayTimer = 0;
         this.isCountingDown = false;
 
-        this.pauseButton = generateButton("Pause", 380, 700);
+        this.pauseButton = generateButton("Pause", (int)(380 * widthScale), (int)(700 * heightScale));
         pauseButton.addListener( new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                System.out.println("yes");
             };
         });
 
@@ -86,14 +94,25 @@ public class PlayState implements Screen
 
         stage.addActor(pauseButton);
 
-        int range = (3-1) + 1;
-        int interval = (int)(Math.random() * range) + 1;
+        int normalRange = 3;
+        int normalInterval = (int)(Math.random() * normalRange) + 1;
+
+        // Schedule a lot of peasant class donuts
         Timer.schedule(new Task() {
             @Override
             public void run() {
                 generateDonuts();
             }
-        }, interval, 3);
+        }, normalInterval, 3);
+
+        normalInterval = (int)(Math.random() * normalRange) + 1;
+
+        Timer.schedule(new Task() {
+            @Override
+            public void run() {
+                generateDonuts();
+            }
+        }, normalInterval, 3);
     }
 
     public void handleInput()
@@ -139,7 +158,7 @@ public class PlayState implements Screen
             donut.update(dt);
 
             // If donut goes out of frame, recycle it
-            if (donut.getPosition().x > 480 || donut.getPosition().x + donut.getWidth() < 0)
+            if (donut.getPosition().x > (int)(480 * widthScale) || donut.getPosition().x + donut.getWidth() < 0)
             {
                 activeDonuts.removeValue(donut, true);
                 activeDonutPool.free(donut);
@@ -190,34 +209,34 @@ public class PlayState implements Screen
     public void render(float dt)
     {
         update(dt);
+        //initViewport(800, 480, 4.0f/3.0f);
 
         Gdx.gl.glClearColor(1,0,0,1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         gsm.batch.begin();
-        gsm.batch.draw(bg, 0 , 0);
+        gsm.batch.draw(bg, 0 , 0, realWidth, realHeight);
 
         // Draw players
-        gsm.batch.draw(left.getAppearance(), left.getPosition().x, left.getPosition().y);
-        gsm.batch.draw(right.getAppearance(), right.getPosition().x, right.getPosition().y);
+        gsm.batch.draw(left.getAppearance(), left.getPosition().x, left.getPosition().y, (int) (left.getAppearance().getWidth() * widthScale), (int)(left.getAppearance().getHeight() * heightScale));
+        gsm.batch.draw(right.getAppearance(), right.getPosition().x, right.getPosition().y, (int) (right.getAppearance().getWidth() * widthScale), (int)(right.getAppearance().getHeight() * heightScale));
 
         // Draw donuts
         for (Donut donut:activeDonuts)
         {
-            gsm.batch.draw(donut.getAppearance(), donut.getPosition().x, donut.getPosition().y);
+            gsm.batch.draw(donut.getAppearance(), donut.getPosition().x, donut.getPosition().y, (int)(donut.getAppearance().getWidth() * widthScale), (int)(donut.getAppearance().getHeight() * heightScale));
         }
 
         // Display score text
-        bmFont.setColor(1.0f, 1.0f, 1.0f, 1.0f);
-        bmFont.draw(gsm.batch, scoreDisplay, 25, 750);
+        bmFont.draw(gsm.batch, scoreDisplay, (int)(25 * widthScale), (int)(750 * heightScale));
 
         // Display timer
-        bmFont.draw(gsm.batch, timerDisplay, 220, 750);
+        bmFont.draw(gsm.batch, timerDisplay, (int)(220 * widthScale), (int)(750 * heightScale));
 
         // Display how many points player got for 1 sec
         if (ateDonut && displayTimer <= 1)
         {
-            bmFont.draw(gsm.batch, ateDisplay, 170, 400);
+            bmFont.draw(gsm.batch, ateDisplay, (int)(170 * widthScale), (int)(400 * heightScale));
         }
         else if (displayTimer > 1)
         {
@@ -228,7 +247,7 @@ public class PlayState implements Screen
         // Display countdown
         if (isCountingDown && countdownDisplayTimer <= 1)
         {
-            bmFont.draw(gsm.batch, countdownString, 220, 350);
+            bmFont.draw(gsm.batch, countdownString, (int)(220 * widthScale), (int)(350 * heightScale));
         }
         else if (countdownDisplayTimer > 1)
         {
@@ -280,43 +299,67 @@ public class PlayState implements Screen
         Donut donut = activeDonutPool.obtain();
 
         int pos = (int)(Math.random() * 2);
-        int y = (int)(Math.random() * 300) + 300;
+        int y = (int)(Math.random() * (int)(300 * widthScale)) + (int)(300 * widthScale);
 
-        int speed = (int)(Math.random() * 10) + 2;
+        int speed = (int)(Math.random() * (int)(10 * widthScale)) + (int)(2 * widthScale);
 
-        donut.setDonut(speed, y, "donut.png", pos, 10);
+        int[] probability = {1,1,1,1,1,1,2,2,2,5,5,10};
+
+        int odds = (int)(Math.random() * probability.length);
+
+        int score = probability[odds];
+        String donutImage;
+
+        switch(score) {
+            case 1:
+                donutImage = "1donut.png";
+                break;
+            case 2:
+                donutImage = "2donut.png";
+                break;
+            case 5:
+                donutImage = "5donut.png";
+                break;
+            case 10:
+                donutImage = "10donut.png";
+                break;
+            default:
+                donutImage = "1donut.png";
+                break;
+        }
+        donut.setDonut(speed, y, donutImage, pos, score);
 
         activeDonuts.add(donut);
     }
 
     public boolean updateCountdownString()
     {
-        if (timer == 20)
+        if ((int)timer == 20)
         {
             countdownString = "10 seconds left!";
             return true;
         }
-        else if (timer == 25)
+        else if ((int)timer == 25)
         {
             countdownString = "5 seconds left!";
             return true;
         }
-        else if (timer == 27)
+        else if ((int)timer == 27)
         {
             countdownString = "3 ...";
             return true;
         }
-        else if (timer == 28)
+        else if ((int)timer == 28)
         {
             countdownString = "2 ...";
             return true;
         }
-        else if (timer == 29)
+        else if ((int)timer == 29)
         {
             countdownString = "1 ...";
             return true;
         }
-        else if (timer == 30)
+        else if ((int)timer == 30)
         {
             countdownString = "FINISH !";
             return true;
@@ -330,6 +373,8 @@ public class PlayState implements Screen
 
         TextButton button = new TextButton(txt, skin);
         button.setPosition(x, y);
+        button.setTransform(true);
+        button.scaleBy(widthScale, heightScale);
 
         return button;
     }

@@ -26,6 +26,13 @@ public class PauseMenu implements Screen
     final GSM gsm;
     private Screen playScreen;
 
+    final static int realHeight = Gdx.graphics.getHeight();
+    final static int realWidth = Gdx.graphics.getWidth();
+    final static float virtualHeight = 800f;
+    final static float virtualWidth = 480f;
+    final static float heightScale = realHeight/virtualHeight;
+    final static float widthScale = realWidth/virtualWidth;
+
     public PauseMenu(GSM gsm, int score, Screen playScreen)
     {
         //super(gsm);
@@ -36,9 +43,9 @@ public class PauseMenu implements Screen
 
         this.bg = new Texture("bg.png");
 
-        this.resumeButton = generateButton("Resume", 220, 600);
-        this.endButton = generateButton("End Game", 220, 400);
-        this.quitButton = generateButton("Quit", 220, 200);
+        this.resumeButton = generateButton("Resume", (int)(220 * widthScale), (int)(600 * heightScale));
+        this.endButton = generateButton("End Game", (int)(220 * widthScale), (int)(400 * heightScale));
+        this.quitButton = generateButton("Quit", (int)(220 * widthScale), (int)(200 * heightScale));
 
         this.stage.addActor(resumeButton);
         this.stage.addActor(endButton);
@@ -86,7 +93,7 @@ public class PauseMenu implements Screen
         handleInput();
 
         gsm.batch.begin();
-        gsm.batch.draw(bg, 0, 0);
+        gsm.batch.draw(bg, 0, 0, realWidth, realHeight);
         gsm.batch.end();
         gsm.batch.begin();
         stage.draw();
@@ -94,10 +101,7 @@ public class PauseMenu implements Screen
     }
 
     @Override
-    public void dispose()
-    {
-
-    }
+    public void dispose() {}
 
     private TextButton generateButton(String txt, int x, int y)
     {
@@ -105,6 +109,8 @@ public class PauseMenu implements Screen
 
         TextButton button = new TextButton(txt, skin);
         button.setPosition(x, y);
+        button.setTransform(true);
+        button.scaleBy(widthScale, heightScale);
 
         return button;
     }

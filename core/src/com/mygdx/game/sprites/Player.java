@@ -3,6 +3,8 @@ package com.mygdx.game.sprites;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.Gdx;
+
 /**
  * Created by hihihong on 2016-07-14.
  */
@@ -13,16 +15,24 @@ public class Player {
     private Vector3 position;
     private Vector3 velocity;
     private Rectangle bond;
-    private int gravity = 15;
 
-    public static final int TOP = 680;
-    public static final int BOTTOM = 100;
-    public static final int LEFT = 80;
-    public static final int RIGHT = 400;
-    public static final int LEFTLEFTMARGIN = 50;
-    public static final int LEFTRIGHTMARGIN = 190;
-    public static final int RIGHTLEFTMARGIN = 290;
-    public static final int RIGHTRIGHTMARGIN = 430;
+    final static int realHeight = Gdx.graphics.getHeight();
+    final static int realWidth = Gdx.graphics.getWidth();
+    final static float virtualHeight = 800f;
+    final static float virtualWidth = 480f;
+    final static float heightScale = realHeight/virtualHeight;
+    final static float widthScale = realWidth/virtualWidth;
+
+    private int gravity = (int)(15 * heightScale);
+
+    public static final int TOP = (int)(680 * heightScale);
+    public static final int BOTTOM = (int)(100 * heightScale);
+    public static final int LEFT = (int)(80 * widthScale);
+    public static final int RIGHT = (int)(400 * widthScale);
+    public static final int LEFTLEFTMARGIN = (int)(50 * widthScale);
+    public static final int LEFTRIGHTMARGIN = (int)(190 * widthScale);
+    public static final int RIGHTLEFTMARGIN = (int)(290 * widthScale);
+    public static final int RIGHTRIGHTMARGIN = (int)(430 * widthScale);
 
     public Player(String filePath, Boolean up, Boolean left)
     {
@@ -41,7 +51,7 @@ public class Player {
             this.position = new Vector3(RIGHT, BOTTOM, 0);
         }
 
-        this.bond = new Rectangle(this.position.x, this.position.y, this.appearance.getWidth(), this.appearance.getHeight());
+        this.bond = new Rectangle();
     }
 
     public void update(float dt)
@@ -69,7 +79,7 @@ public class Player {
         }
 
         // Set the bond where the player is
-        this.bond.set(this.position.x, this.position.y, this.appearance.getWidth(), this.appearance.getHeight());
+        this.bond.set((int)(this.position.x), (int)(this.position.y), (int)(this.appearance.getWidth() * widthScale), (int)(this.appearance.getHeight() * heightScale));
     }
 
     public void jump()
@@ -107,7 +117,7 @@ public class Player {
             }
             else
             {
-                this.position.x = 430 - this.appearance.getWidth();
+                this.position.x = RIGHTRIGHTMARGIN - this.appearance.getWidth();
             }
         }
     }

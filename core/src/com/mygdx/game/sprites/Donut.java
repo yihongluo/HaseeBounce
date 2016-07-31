@@ -1,5 +1,6 @@
 package com.mygdx.game.sprites;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.Rectangle;
@@ -15,6 +16,13 @@ public class Donut
     private int left;
     private Rectangle bond;
     private int score;
+
+    final static int realHeight = Gdx.graphics.getHeight();
+    final static int realWidth = Gdx.graphics.getWidth();
+    final static float virtualHeight = 800f;
+    final static float virtualWidth = 480f;
+    final static float heightScale = realHeight/virtualHeight;
+    final static float widthScale = realWidth/virtualWidth;
 
     public Donut()
     {
@@ -32,7 +40,8 @@ public class Donut
         {
             this.position.x = this.position.x - speed;
         }
-        this.bond.set(this.position.x, this.position.y, this.appearance.getWidth(), this.appearance.getHeight());
+
+        this.bond.set((int)(this.position.x), (int)(this.position.y), (int)(this.appearance.getWidth() * widthScale), (int)(this.appearance.getHeight() * heightScale));
     }
 
     public void setDonut(int speed, int y, String path, int left, int score)
@@ -46,7 +55,7 @@ public class Donut
         }
         else
         {
-            this.position = new Vector3(480, y, 0);
+            this.position = new Vector3((int)(480 * widthScale), y, 0);
         }
 
         this.appearance = new Texture(path);

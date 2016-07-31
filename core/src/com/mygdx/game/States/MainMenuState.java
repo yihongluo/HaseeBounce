@@ -12,6 +12,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 
 /**
  * Created by hihihong on 2016-07-14.
@@ -25,6 +26,12 @@ public class MainMenuState implements Screen {
     private Pixmap pixmap;
     final GSM gsm;
 
+    final static int realHeight = Gdx.graphics.getHeight();
+    final static int realWidth = Gdx.graphics.getWidth();
+    final static float virtualHeight = 800f;
+    final static float virtualWidth = 480f;
+    final static float heightScale = realHeight/virtualHeight;
+    final static float widthScale = realWidth/virtualWidth;
 
     public MainMenuState(GSM gsm) {
         this.gsm = gsm;
@@ -32,7 +39,10 @@ public class MainMenuState implements Screen {
 
         this.stage = new Stage();
 
-        this.startButton = generateButton("Start game", 220, 420);
+        System.out.println(widthScale);
+        System.out.println(heightScale);
+        System.out.println(realHeight);
+        this.startButton = generateButton("Start game", (int)(220 * widthScale), (int)(420 * heightScale));
         stage.addActor(startButton);
 
     }
@@ -46,41 +56,32 @@ public class MainMenuState implements Screen {
     }
 
     @Override
-    public void resize(int width, int height)
-    {
-
-    }
+    public void resize(int width, int height) {}
 
     @Override
-    public void pause()
-    {
-
-    }
+    public void pause() {}
 
     @Override
-    public void resume()
-    {
-
-    }
+    public void resume() {}
 
     @Override
-    public void hide()
-    {
-
-    }
+    public void hide() {}
 
     @Override
     public void render(float dt)
     {
         handleInput();
 
+        //initViewport(800, 480, 4.0f/3.0f);
+
         Gdx.gl.glClearColor(1,0,0,1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         gsm.batch.begin();
-        gsm.batch.draw(bg, 0, 0);
+        gsm.batch.draw(bg, 0, 0, realWidth, realHeight);
         gsm.batch.end();
         gsm.batch.begin();
+        //stage.getViewport().apply();
         stage.draw();
         gsm.batch.end();
     }
@@ -105,6 +106,8 @@ public class MainMenuState implements Screen {
 
         TextButton button = new TextButton(txt, skin);
         button.setPosition(x, y);
+        button.setTransform(true);
+        button.scaleBy(widthScale, heightScale);
 
         return button;
     }

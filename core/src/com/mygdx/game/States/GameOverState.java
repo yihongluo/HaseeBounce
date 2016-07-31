@@ -27,6 +27,13 @@ public class GameOverState implements Screen{
     private String scoreDisplay;
     final GSM gsm;
 
+    final static int realHeight = Gdx.graphics.getHeight();
+    final static int realWidth = Gdx.graphics.getWidth();
+    final static float virtualHeight = 800f;
+    final static float virtualWidth = 480f;
+    final static float heightScale = realHeight/virtualHeight;
+    final static float widthScale = realWidth/virtualWidth;
+
     public GameOverState(GSM gsm, int score)
     {
         //super(gsm);
@@ -34,13 +41,16 @@ public class GameOverState implements Screen{
 
         stage = new Stage();
 
-        this.bg = new Texture("gameoverBG.png");
+        this.bg = new Texture("bg.png");
 
         this.scoreDisplay = "Total points: " + score;
 
-        font = new BitmapFont();
+        this.font = new BitmapFont();
+        this.font.setColor(1.0f, 1.0f, 1.0f, 1.0f);
+        this.font.getData().setScale(widthScale, heightScale);
 
-        generateButton("Restart", 120, 420);
+        this.restartButton = generateButton("Restart", (int)(220 * widthScale), (int)(420 * heightScale));
+        this.stage.addActor(restartButton);
     }
 
     public void handleInput()
@@ -59,23 +69,15 @@ public class GameOverState implements Screen{
 
         Gdx.gl.glClearColor(1,0,0,1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
         gsm.batch.begin();
-        gsm.batch.draw(bg, 0, 0);
+
+        font.draw(gsm.batch, scoreDisplay, (int)(100 * widthScale), (int)(750 * heightScale));
+        gsm.batch.draw(bg, 0, 0, realWidth, realHeight);
         gsm.batch.end();
+
         gsm.batch.begin();
-
-        stage.getBatch().begin();
-        stage.getBatch().draw(bg, 0, 0, 480, 800);
-        stage.getBatch().end();
-
         stage.draw();
-        gsm.batch.end();
-
-        gsm.batch.begin();
-
-        font.setColor(1.0f, 1.0f, 1.0f, 1.0f);
-        font.draw(gsm.batch, scoreDisplay, 100, 750);
-
         gsm.batch.end();
     }
 
@@ -100,16 +102,16 @@ public class GameOverState implements Screen{
     @Override
     public void hide() {}
 
-    private void generateButton(String txt, int x, int y)
+    private TextButton generateButton(String txt, int x, int y)
     {
         createBasicSkin();
 
         TextButton button = new TextButton(txt, skin);
         button.setPosition(x, y);
+        button.setTransform(true);
+        button.scaleBy(widthScale, heightScale);
 
-        this.restartButton = button;
-
-        stage.addActor(button);
+        return button;
     }
 
     private void createBasicSkin(){
